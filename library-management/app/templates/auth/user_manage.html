@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %} 管理 {% endblock %}
+{% block head %} <link rel="stylesheet" href="{{ url_for('static', filename='css/manage.css') }}"> {% endblock %}
+
+{% block content %}
+<div class="container shadow p-3 mb-5 bg-white rounded">
+    <div class="container-fluid mt-3">
+        <!-- 搜索面板 -->
+        <div class="search-panel">
+            <div class="search-row">
+                <label class="search-label">书名：</label>
+                <input type="text" class="form-control form-control-sm search-control" placeholder="输入书名">
+
+                <label class="search-label">作者：</label>
+                <input type="text" class="form-control form-control-sm search-control" placeholder="输入作者">
+            </div>
+
+            <div class="search-row">
+                <label class="search-label">分类：</label>
+                <select class="form-control form-control-sm search-control">
+                    <option value="">全部分类</option>
+                    <option value="文学">文学</option>
+                    <option value="历史">历史</option>
+                    <option value="科技">科技</option>
+                    <option value="艺术">艺术</option>
+                    <option value="教育">教育</option>
+                </select>
+
+                <label class="search-label">位置：</label>
+                <select class="form-control form-control-sm search-control">
+                    <option value="">全部位置</option>
+                    <option value="A区">A区</option>
+                    <option value="B区">B区</option>
+                    <option value="C区">C区</option>
+                    <option value="D区">D区</option>
+                </select>
+            </div>
+
+            <div class="search-row">
+
+                <label class="search-label">排序方式：</label>
+                <select class="form-control form-control-sm search-control">
+                    <option value="title">按书名排序</option>
+                    <option value="author">按作者排序</option>
+                    <option value="year">按出版年份</option>
+                    <option value="location">按位置排序</option>
+                    <option value="add_time">按入库时间</option>
+                </select>
+            </div>
+
+
+
+            <div class="search-row">
+                <div class="action-buttons">
+                    <button class="btn btn-primary btn-sm" onclick="performSearch()">
+                        <i class="fas fa-search"></i> 查询
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="resetSearch()">
+                        <i class="fas fa-redo"></i> 重置
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 图书列表 -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">图书列表</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th width="100">封面</th>
+                                <th width="160">书名</th>
+                                <th width="80">作者</th>
+                                <th width="100">分类</th>
+                                <th width="80">位置</th>
+                                <th width="80">借阅日期</th>
+                                <th width="80">截止日期</th>
+                                <th width="80">状态</th>
+                                <th width="80">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bookTableBody">
+                            {% for borrow in borrows %}
+                                <tr>
+                                    <td>
+                                        <div class="book-cover">
+                                            {% if borrow.book.image %}
+                                                <img src="{{ url_for('uploads', filename=borrow.book.image) }}" alt="{{ borrow.book.title }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                            {% else %}
+                                                <i class="fas fa-book text-muted"></i>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td><a href="{{ url_for('books.book_detail', book_id=borrow.book.id) }}">{{ borrow.book.title }}</a></td>
+                                    <td>{{ borrow.book.author }}</td>
+                                    <td>{{ borrow.book.category.name }}</td>
+                                    <td>
+                                        <span class="badge badge-info">{{ borrow.book.location }}</span>
+                                    </td>
+                                    <td>{{ borrow.borrow_date }}</td>
+                                    <td>{{ borrow.due_date }}</td>
+                                    <td>
+                                        <span class="badge badge-info">
+                                            {% if borrow.status == 'borrowed' %} 借阅中
+                                            {% elif borrow.status == 'overdue' %} 超时
+                                            {% elif borrow.status == 'returned' %} 已归还
+                                            {% else %} 丢失
+                                            {% endif %}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <form method="POST" action="{{ url_for('borrow.delete_borrow', borrow_id=borrow.id) }}" onsubmit="return confirm('确定删除此借阅记录？')" style="display:inline;">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <i class="fas fa-trash"></i> 删除
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 分页 -->
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <div class="text-muted">
+                显示 <span id="startRecord">{{ (pagination.page - 1) * pagination.per_page + 1 if pagination.total > 0 else 0 }}</span>
+                到 <span id="endRecord">{{ pagination.page * pagination.per_page if pagination.page * pagination.per_page <= pagination.total else pagination.total }}</span> 条，
+                共 <span id="totalRecords">{{ pagination.total }}</span> 条记录
+            </div>
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    {% if pagination.has_prev %}
+                    <li class="page-item"><a class="page-link" href="?{{ page_url(pagination.prev_num) }}">上一页</a></li>
+                    {% else %}
+                    <li class="page-item disabled"><a class="page-link" href="#">上一页</a></li>
+                    {% endif %}
+                    {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                        {% if page_num %}
+                        <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                            <a class="page-link" href="?{{ page_url(page_num) }}">{{ page_num }}</a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled"><a class="page-link" href="#">...</a></li>
+                        {% endif %}
+                    {% endfor %}
+                    {% if pagination.has_next %}
+                    <li class="page-item"><a class="page-link" href="?{{ page_url(pagination.next_num) }}">下一页</a></li>
+                    {% else %}
+                    <li class="page-item disabled"><a class="page-link" href="#">下一页</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+
+{% endblock %}

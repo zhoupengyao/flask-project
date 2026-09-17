@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %} 用户管理 {% endblock %}
+{% block head %} <link rel="stylesheet" href="{{ url_for('static', filename='css/manage.css') }}"> {% endblock %}
+
+{% block content %}
+    <div class="container shadow p-3 mb-5 bg-white rounded">
+    <div class="container-fluid mt-3">
+        <!-- 搜索面板 -->
+        <div class="search-panel">
+            <div class="search-row">
+                <label class="search-label">书名：</label>
+                <input type="text" class="form-control form-control-sm search-control" placeholder="输入书名">
+
+                <label class="search-label">ISBN：</label>
+                <input type="text" class="form-control form-control-sm search-control" placeholder="输入ISBN号">
+            </div>
+
+            <div class="search-row">
+                <label class="search-label">显示方式：</label>
+                <select class="form-control form-control-sm search-control">
+                    <option value="all">显示全部</option>
+                    <option value="available">仅显示可借阅</option>
+                    <option value="borrowed">仅显示已借出</option>
+                </select>
+
+                <label class="search-label">排序方式：</label>
+                <select class="form-control form-control-sm search-control">
+                    <option value="title">按书名排序</option>
+                    <option value="author">按作者排序</option>
+                    <option value="year">按出版年份</option>
+                    <option value="location">按位置排序</option>
+                    <option value="add_time">按入库时间</option>
+                </select>
+            </div>
+
+            <div class="search-row">
+                <div class="action-buttons">
+                    <button class="btn btn-primary btn-sm" onclick="performSearch()">
+                        <i class="fas fa-search"></i> 查询
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="resetSearch()">
+                        <i class="fas fa-redo"></i> 重置
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 图书列表 -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">借阅列表</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th width="50">封面</th>
+                                <th width="180">书名</th>
+                                <th width="100">ISBN</th>
+                                <th width="80">读者</th>
+                                <th width="70">借阅时间</th>
+                                <th width="70">截止时间</th>
+                                <th width="80">状态</th>
+                                <th width="100">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bookTableBody">
+                            {% for borrow in borrows %}
+                                <tr>
+                                    <td>
+                                        <div class="book-cover">
+                                            {% if borrow.book.image %}
+                                                <img src="{{ url_for('uploads', filename=borrow.book.image) }}" alt="{{ borrow.book.title }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                            {% else %}
+                                                <i class="fas fa-book text-muted"></i>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>{{ borrow.book.title }}</td>
+                                    <td>{{ borrow.book.isbn }}</td>
+                                    <td>{{ borrow.user.username }}</td>
+                                    <td>{{ borrow.borrow_date }}</td>
+                                    <td>{{ borrow.due_date }}</td>
+                                    <td>{%if borrow.status == 'borrowed' %}借阅中{% elif borrow.status == 'returned' %}已还{% else %}逾期{% endif %}</td>
+                                    <td>
+                                        {% if borrow.status == 'borrowed' or borrow.status == 'overdue' %}
+                                        <form method="POST" action="{{ url_for('borrow.return_book', borrow_id=borrow.id) }}" style="display:inline;">
+                                            <button type="submit" class="btn btn-sm btn-success">
+                                                <i class="fas fa-undo"></i> 归还
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 分页 -->
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <div class="text-muted">
+                显示 <span id="startRecord">{{ (pagination.page - 1) * pagination.per_page + 1 if pagination.total > 0 else 0 }}</span>
+                到 <span id="endRecord">{{ pagination.page * pagination.per_page if pagination.page * pagination.per_page <= pagination.total else pagination.total }}</span> 条，
+                共 <span id="totalRecords">{{ pagination.total }}</span> 条记录
+            </div>
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    {% if pagination.has_prev %}
+                    <li class="page-item"><a class="page-link" href="?{{ page_url(pagination.prev_num) }}">上一页</a></li>
+                    {% else %}
+                    <li class="page-item disabled"><a class="page-link" href="#">上一页</a></li>
+                    {% endif %}
+                    {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                        {% if page_num %}
+                        <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                            <a class="page-link" href="?{{ page_url(page_num) }}">{{ page_num }}</a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled"><a class="page-link" href="#">...</a></li>
+                        {% endif %}
+                    {% endfor %}
+                    {% if pagination.has_next %}
+                    <li class="page-item"><a class="page-link" href="?{{ page_url(pagination.next_num) }}">下一页</a></li>
+                    {% else %}
+                    <li class="page-item disabled"><a class="page-link" href="#">下一页</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+{% endblock %}

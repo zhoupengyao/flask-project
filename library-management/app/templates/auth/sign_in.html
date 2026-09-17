@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if operate == 'login' %}
+    登录
+    {% elif operate == 'register' %}
+    注册
+    {% elif operate == 'forget' %}
+    找回密码
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-3"></div>
+        <div class="col-md-6 sign_form">
+            <form class="shadow p-3 mb-5 bg-white rounded" method="post" novalidate>
+              {{ form.hidden_tag() }}
+              {% if operate == 'login' %}
+                  <h3 class="text-center">登录</h3>
+                  <div class="form-group">
+                    {{ form.username.label }}
+                    {{ form.username(class="form-control", placeholder="请输入用户名") }}
+                  </div>
+                  <div class="form-group">
+                      {{ form.password.label }}
+                      {{ form.password(class="form-control", placeholder="请输入密码") }}
+                  </div>
+                  <div class="d-flex justify-content-between mb-3">
+                     <small><a href="{{ url_for('auth.sign_in', operate='register') }}">没有账号？去注册</a></small>
+                     <small><a href="{{ url_for('auth.sign_in', operate='forget') }}">忘记密码？</a></small>
+                  </div>
+                  <div class="text-center">
+                     {{ form.submit(class="btn btn-primary") }}
+                  </div>
+              {% elif operate == 'register' %}
+                <h3 class="text-center">注册</h3>
+                  <div class="form-group">
+                    {{ form.username.label }}
+                    {{ form.username(class="form-control", placeholder="请输入用户名") }}
+                  </div>
+                  <div class="form-group">
+                      {{ form.password.label }}
+                      {{ form.password(class="form-control", placeholder="请输入密码") }}
+                  </div>
+                  <div class="form-group">
+                      {{ form.password2.label }}
+                      {{ form.password2(class="form-control", placeholder="请确认密码") }}
+                  </div>
+                  <div class="form-group">
+                      {{ form.email.label }}
+                      {{ form.email(class="form-control", placeholder="请输入邮箱") }}
+                  </div>
+                  <div class="d-flex justify-content-end mb-3">
+                     <small><a href="{{ url_for('auth.sign_in', operate='login') }}">已有账号？去登录</a></small>
+                  </div>
+                  <div class="text-center">
+                    {{ form.submit(class="btn btn-primary") }}
+                  </div>
+              {% elif operate == 'forget' %}
+                <h3 class="text-center">找回密码</h3>
+                  <div class="form-group">
+                      {{ form.email.label }}
+                      <div class="input-group">
+                        {{ form.email(class="form-control", placeholder="请输入邮箱", id="forgetEmail") }}
+                        <div class="input-group-append">
+                          <button type="button" class="btn btn-outline-primary" id="getCodeBtn" onclick="sendCode()">获取验证码</button>
+                        </div>
+                      </div>
+                  </div>
+                  <div class="form-group">
+                    {{ form.captcha.label }}
+                    <div class="input-group">
+                      {{ form.captcha(class="form-control", placeholder="请输入图形验证码", maxlength=4, id="captchaInput") }}
+                      <div class="input-group-append">
+                        <img src="{{ url_for('auth.captcha') }}" id="captchaImg" onclick="this.src='{{ url_for('auth.captcha') }}?'+Date.now()" style="cursor:pointer;border-radius:4px;height:38px;" alt="验证码" title="点击刷新">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                      {{ form.verification_code.label }}
+                      {{ form.verification_code(class="form-control", placeholder="请输入邮箱验证码") }}
+                  </div>
+                  <div class="form-group">
+                      {{ form.password.label }}
+                      {{ form.password(class="form-control", placeholder="请输入新密码") }}
+                  </div>
+                  <div class="form-group">
+                      {{ form.password2.label }}
+                      {{ form.password2(class="form-control", placeholder="请确认新密码") }}
+                  </div>
+                  <div class="d-flex justify-content-end mb-3">
+                     <small><a href="{{ url_for('auth.sign_in', operate='login') }}">已有账号？去登录</a></small>
+                  </div>
+                  <div class="text-center">
+                      {{ form.submit(class="btn btn-primary") }}
+                  </div>
+              {% endif %}
+            </form>
+        </div>
+        <div class="col-md-3"></div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block script %}
+<script>
+function sendCode() {
+    var email = document.getElementById('forgetEmail').value;
+    var captcha = document.getElementById('captchaInput').value;
+    if (!email) { alert('请输入邮箱'); return; }
+    if (!captcha) { alert('请输入图形验证码'); return; }
+    var btn = document.getElementById('getCodeBtn');
+    btn.disabled = true;
+    btn.textContent = '发送中...';
+    fetch('{{ url_for("auth.send_code") }}', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'email=' + encodeURIComponent(email) + '&captcha=' + encodeURIComponent(captcha)
+    }).then(function(r) { return r.json(); }).then(function(data) {
+        if (data.ok) {
+            alert(data.msg);
+        } else {
+            alert(data.msg);
+        }
+        document.getElementById('captchaImg').src = '{{ url_for("auth.captcha") }}?' + Date.now();
+        document.getElementById('captchaInput').value = '';
+        btn.disabled = false;
+        btn.textContent = '获取验证码';
+    }).catch(function() {
+        alert('请求失败，请重试');
+        btn.disabled = false;
+        btn.textContent = '获取验证码';
+    });
+}
+</script>
+{% endblock %}

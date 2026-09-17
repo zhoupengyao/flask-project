@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+
+{% block title %} 管理 {% endblock %}
+{% block head %} <link rel="stylesheet" href="{{ url_for('static', filename='css/manage.css') }}"> {% endblock %}
+
+{% block content %}
+<div class="container shadow p-3 mb-5 bg-white rounded">
+    <div class="container-fluid mt-3">
+        <!-- 搜索面板 -->
+        <form class="search-panel" id="searchForm" method="GET" action="{{ url_for('books.admin_index') }}">
+            <div class="search-row">
+                <label class="search-label">书名：</label>
+                <input type="text" class="form-control form-control-sm search-control" name="keyword" placeholder="输入书名" value="{{ request.args.get('keyword', '') }}">
+
+                <label class="search-label">作者：</label>
+                <input type="text" class="form-control form-control-sm search-control" name="author" placeholder="输入作者" value="{{ request.args.get('author', '') }}">
+            </div>
+
+            <div class="search-row">
+                <label class="search-label">ISBN：</label>
+                <input type="text" class="form-control form-control-sm search-control" name="isbn" placeholder="输入ISBN号" value="{{ request.args.get('isbn', '') }}">
+
+                <label class="search-label">出版社：</label>
+                <input type="text" class="form-control form-control-sm search-control" name="publisher" placeholder="输入出版社" value="{{ request.args.get('publisher', '') }}">
+            </div>
+
+            <div class="search-row">
+                <label class="search-label">分类：</label>
+                <select class="form-control form-control-sm search-control" name="category_id">
+                    <option value="">全部分类</option>
+                    <option value="1" {% if request.args.get('category_id') == '1' %}selected{% endif %}>文学</option>
+                    <option value="2" {% if request.args.get('category_id') == '2' %}selected{% endif %}>历史</option>
+                    <option value="3" {% if request.args.get('category_id') == '3' %}selected{% endif %}>科技</option>
+                    <option value="4" {% if request.args.get('category_id') == '4' %}selected{% endif %}>艺术</option>
+                    <option value="5" {% if request.args.get('category_id') == '5' %}selected{% endif %}>教育</option>
+                </select>
+
+                <label class="search-label">位置：</label>
+                <select class="form-control form-control-sm search-control" name="location">
+                    <option value="">全部位置</option>
+                    <option value="A区" {% if request.args.get('location') == 'A区' %}selected{% endif %}>A区</option>
+                    <option value="B区" {% if request.args.get('location') == 'B区' %}selected{% endif %}>B区</option>
+                    <option value="C区" {% if request.args.get('location') == 'C区' %}selected{% endif %}>C区</option>
+                    <option value="D区" {% if request.args.get('location') == 'D区' %}selected{% endif %}>D区</option>
+                </select>
+            </div>
+
+            <div class="search-row">
+                <label class="search-label">出版年份：</label>
+                <div class="d-flex align-items-center search-control">
+                    <input type="number" class="form-control form-control-sm" name="year_from" placeholder="起始年份" style="width: 100px;" value="{{ request.args.get('year_from', '') }}">
+                    <span class="mx-2">-</span>
+                    <input type="number" class="form-control form-control-sm" name="year_to" placeholder="结束年份" style="width: 100px;" value="{{ request.args.get('year_to', '') }}">
+                </div>
+
+                <label class="search-label">排序方式：</label>
+                <select class="form-control form-control-sm search-control" name="sort">
+                    <option value="title" {% if request.args.get('sort', 'title') == 'title' %}selected{% endif %}>按书名排序</option>
+                    <option value="author" {% if request.args.get('sort') == 'author' %}selected{% endif %}>按作者排序</option>
+                    <option value="year" {% if request.args.get('sort') == 'year' %}selected{% endif %}>按出版年份</option>
+                    <option value="location" {% if request.args.get('sort') == 'location' %}selected{% endif %}>按位置排序</option>
+                    <option value="add_time" {% if request.args.get('sort') == 'add_time' %}selected{% endif %}>按入库时间</option>
+                </select>
+            </div>
+
+            <div class="search-row">
+                <label class="search-label">显示方式：</label>
+                <select class="form-control form-control-sm search-control" name="display">
+                    <option value="all" {% if request.args.get('display', 'all') == 'all' %}selected{% endif %}>显示全部</option>
+                    <option value="available" {% if request.args.get('display') == 'available' %}selected{% endif %}>仅显示可借阅</option>
+                    <option value="borrowed" {% if request.args.get('display') == 'borrowed' %}selected{% endif %}>仅显示已借出</option>
+                </select>
+            </div>
+
+            <div class="search-row">
+                <div class="action-buttons">
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="fas fa-search"></i> 查询
+                    </button>
+                    <a href="{{ url_for('books.admin_index') }}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-redo"></i> 重置
+                    </a>
+                </div>
+            </div>
+        </form>
+
+        <!-- 图书列表 -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">图书列表</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th width="70">封面</th>
+                                <th width="160">书名</th>
+                                <th width="100">作者</th>
+                                <th width="100">ISBN</th>
+                                <th width="100">出版社</th>
+                                <th width="70">出版年</th>
+                                <th width="70">分类</th>
+                                <th width="80">位置</th>
+                                <th width="80">状态</th>
+                                <th width="120">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bookTableBody">
+                            {% for book in books %}
+                                <tr>
+                                    <td>
+                                        <div class="book-cover">
+                                            {% if book.image %}
+                                                <img src="{{ url_for('uploads', filename=book.image) }}" alt="{{ book.title }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                            {% else %}
+                                                <i class="fas fa-book text-muted"></i>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>{{ book.title }}</td>
+                                    <td>{{ book.author }}</td>
+                                    <td>{{ book.isbn }}</td>
+                                    <td>{{ book.publisher }}</td>
+                                    <td>{{ book.published_date }}</td>
+                                    <td>{{ book.category.name }}</td>
+                                    <td>
+                                        <span class="badge badge-info">{{ book.location }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if book.available_copies > 0 %}badge-success{% else %}badge-danger{% endif %}">
+                                            {{ book.available_copies }}/{{ book.total_copies }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('books.admin_editbook', book_id=book.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i> 修改
+                                        </a>
+
+                                        <!-- 删除确认模态框 -->
+                                        <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="deleteConfirmModalLabel">确认删除</h5>
+                                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                            <span aria-hidden="true">&times;</span>
+                                                        </button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <p>您确定要删除这条记录吗？此操作不可恢复。</p>
+                                                        <p class="text-muted small">删除后数据将无法恢复，请谨慎操作。</p>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                                                        <a href="{{ url_for('books.delete_book', book_id=book.id) }}" class="btn btn-danger">
+                                                            <i class="fas fa-trash"></i> 确认删除
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button class="btn btn-sm btn-danger ml-1"
+                                            data-toggle="modal"
+                                            data-target="#deleteConfirmModal"
+                                            data-item-id="{{ book.id }}"
+                                            data-item-name="借阅记录">
+                                        <i class="fas fa-trash"></i> 删除
+                                    </button>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 分页 -->
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <div class="text-muted">
+                显示 <span id="startRecord">{{ (pagination.page - 1) * pagination.per_page + 1 if pagination.total > 0 else 0 }}</span>
+                到 <span id="endRecord">{{ pagination.page * pagination.per_page if pagination.page * pagination.per_page <= pagination.total else pagination.total }}</span> 条，
+                共 <span id="totalRecords">{{ pagination.total }}</span> 条记录
+            </div>
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    {% if pagination.has_prev %}
+                    <li class="page-item"><a class="page-link" href="?{{ page_url(pagination.prev_num) }}">上一页</a></li>
+                    {% else %}
+                    <li class="page-item disabled"><a class="page-link" href="#">上一页</a></li>
+                    {% endif %}
+                    {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                        {% if page_num %}
+                        <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                            <a class="page-link" href="?{{ page_url(page_num) }}">{{ page_num }}</a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled"><a class="page-link" href="#">...</a></li>
+                        {% endif %}
+                    {% endfor %}
+                    {% if pagination.has_next %}
+                    <li class="page-item"><a class="page-link" href="?{{ page_url(pagination.next_num) }}">下一页</a></li>
+                    {% else %}
+                    <li class="page-item disabled"><a class="page-link" href="#">下一页</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+
+{% endblock %}

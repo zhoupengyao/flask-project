@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %} 首页 {% endblock %}
+
+{% block content %}
+<div class="jumbotron jumbotron-fluid">
+  <div class="container text-center">
+    <h1>图书馆</h1>
+    <p class="lead">知识海洋，触手可及。</p>
+    <div class="flex_center">
+      <form action="{{ url_for('books.search') }}" method="GET">
+        <input type="search" name="keyword" placeholder="搜索书名或作者..." aria-label="Search">
+        <button type="submit"><i class="fas fa-search mr-1"></i>搜索</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-9">
+      <nav class="nav nav1">
+        <a class="nav-link active" href="#">全部</a>
+        <a class="nav-link" href="#">文学</a>
+        <a class="nav-link" href="#">小说</a>
+        <a class="nav-link" href="#">历史文化</a>
+        <a class="nav-link" href="#">科学新知</a>
+        <a class="nav-link" href="#">艺术设计</a>
+        <a class="nav-link" href="#">商业经管</a>
+        <span><a href="#">更多 &raquo;</a></span>
+      </nav>
+
+      <div class="book-grid">
+        {% for book in books %}
+          <a href="{{ url_for('books.book_detail', book_id=book.id) }}" class="book-item">
+            <img src="{{ url_for('uploads', filename=book.image) if book.image else url_for('static', filename='images/logo.png') }}" alt="{{ book.title }}">
+            <div class="px-3 pt-2 pb-3">
+              <div class="book-title">{{ book.title }}</div>
+              <div class="book-author">{{ book.author }}</div>
+            </div>
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+
+    {% include "sidebar.html" %}
+  </div>
+</div>
+{% endblock %}
+
+
+
+
+
+{% block scripts %}
+
+{% endblock %}
