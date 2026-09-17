@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}二手书屋 - 首页{% endblock %}
+{% block content %}
+<div class="p-5 mb-4 bg-light rounded-3">
+    <div class="container-fluid py-3">
+        <h1 class="display-5 fw-bold">欢迎来到二手书屋</h1>
+        <p class="col-md-8 fs-4">每一本旧书，都有一段新故事。以实惠的价格，发现被遗忘的好书。</p>
+        <a href="{{ url_for('books.book_list') }}" class="btn btn-primary btn-lg">浏览图书</a>
+    </div>
+</div>
+
+{% if categories %}
+<div class="mb-4">
+    <h4>图书分类</h4>
+    <div class="d-flex flex-wrap gap-2 mt-2">
+        {% for cat in categories %}
+            <a href="{{ url_for('books.book_list', category=cat.id) }}" class="btn btn-outline-secondary btn-sm">{{ cat.name }}</a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<h4 class="mb-3">最新上架</h4>
+<div class="row row-cols-1 row-cols-md-4 g-4">
+    {% for book in new_books %}
+        <div class="col">
+            <div class="card h-100">
+                {% if book.cover_url %}
+                    <img src="{{ url_for('static', filename='uploads/' + book.cover_url) }}" class="card-img-top" alt="{{ book.title }}" style="height: 200px; object-fit: cover;">
+                {% else %}
+                    <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center text-white" style="height: 200px;">
+                        暂无封面
+                    </div>
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ book.title }}</h5>
+                    <p class="card-text text-muted">{{ book.author }}</p>
+                    <p class="card-text">
+                        <span class="text-danger fw-bold">¥{{ book.price }}</span>
+                        {% if book.original_price %}
+                            <small class="text-muted text-decoration-line-through">¥{{ book.original_price }}</small>
+                        {% endif %}
+                    </p>
+                    <a href="{{ url_for('books.book_detail', book_id=book.id) }}" class="btn btn-outline-primary btn-sm">查看详情</a>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="col-12">
+            <p class="text-muted">暂无图书，敬请期待。</p>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

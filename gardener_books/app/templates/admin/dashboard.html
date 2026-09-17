@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}管理后台{% endblock %}
+{% block content %}
+<h4>管理后台</h4>
+<hr>
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card text-bg-primary">
+            <div class="card-body">
+                <h5 class="card-title">{{ stats.user_count }}</h5>
+                <p class="card-text">用户总数</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-bg-success">
+            <div class="card-body">
+                <h5 class="card-title">{{ stats.book_count }}</h5>
+                <p class="card-text">图书总数</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-bg-info">
+            <div class="card-body">
+                <h5 class="card-title">{{ stats.order_count }}</h5>
+                <p class="card-text">订单总数</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-bg-warning">
+            <div class="card-body">
+                <h5 class="card-title">{{ stats.pending_orders }}</h5>
+                <p class="card-text">待处理订单</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mb-3">
+    <a href="{{ url_for('admin.books') }}" class="btn btn-outline-primary">图书管理</a>
+    <a href="{{ url_for('admin.orders') }}" class="btn btn-outline-primary">订单管理</a>
+    <a href="{{ url_for('admin.users') }}" class="btn btn-outline-primary">用户管理</a>
+</div>
+
+<h5 class="mt-4">最近订单</h5>
+<table class="table table-sm">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>用户</th>
+            <th>金额</th>
+            <th>状态</th>
+            <th>时间</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for order in recent_orders %}
+        <tr>
+            <td>{{ order.id }}</td>
+            <td>{{ order.user.username }}</td>
+            <td>¥{{ "%.2f"|format(order.total_amount) }}</td>
+            <td>{{ order.status }}</td>
+            <td>{{ order.created_at.strftime('%m-%d %H:%M') }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

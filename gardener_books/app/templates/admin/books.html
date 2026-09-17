@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}图书管理{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4>图书管理</h4>
+    <a href="{{ url_for('admin.book_add') }}" class="btn btn-success">添加图书</a>
+</div>
+
+<table class="table table-hover">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>书名</th>
+            <th>作者</th>
+            <th>价格</th>
+            <th>分类</th>
+            <th>库存</th>
+            <th>状态</th>
+            <th>操作</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for book in pagination.items %}
+        <tr>
+            <td>{{ book.id }}</td>
+            <td>{{ book.title }}</td>
+            <td>{{ book.author }}</td>
+            <td>¥{{ book.price }}</td>
+            <td>{{ book.category.name if book.category else '-' }}</td>
+            <td>{{ book.stock if book.stock else '充足' }}</td>
+            <td>
+                <span class="badge {% if book.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                    {{ '上架' if book.is_active else '下架' }}
+                </span>
+            </td>
+            <td>
+                <a href="{{ url_for('admin.book_edit', book_id=book.id) }}" class="btn btn-sm btn-outline-primary">编辑</a>
+                <form method="post" action="{{ url_for('admin.book_toggle', book_id=book.id) }}" style="display:inline;">
+                    <button type="submit" class="btn btn-sm btn-outline-warning">
+                        {{ '下架' if book.is_active else '上架' }}
+                    </button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if pagination.pages > 1 %}
+<nav>
+    <ul class="pagination justify-content-center">
+        {% for page in pagination.iter_pages() %}
+            {% if page %}
+                <li class="page-item {% if page == pagination.page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('admin.books', page=page) }}">{{ page }}</a>
+                </li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

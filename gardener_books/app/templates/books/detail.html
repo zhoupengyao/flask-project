@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}{{ book.title }}{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        {% if book.cover_url %}
+            <img src="{{ url_for('static', filename='uploads/' + book.cover_url) }}" class="img-fluid rounded" alt="{{ book.title }}">
+        {% else %}
+            <div class="bg-secondary rounded d-flex align-items-center justify-content-center text-white" style="height: 300px;">
+                暂无封面
+            </div>
+        {% endif %}
+    </div>
+    <div class="col-md-8">
+        <h3>{{ book.title }}</h3>
+        <p class="text-muted">{{ book.author }}</p>
+        <hr>
+        <p><strong>价格：</strong><span class="text-danger fs-4">¥{{ book.price }}</span>
+            {% if book.original_price %}
+                <small class="text-muted text-decoration-line-through ms-2">原价 ¥{{ book.original_price }}</small>
+            {% endif %}
+        </p>
+        <p><strong>品相：</strong>{{ book.condition }}</p>
+        {% if book.publisher %}<p><strong>出版社：</strong>{{ book.publisher }}</p>{% endif %}
+        {% if book.isbn %}<p><strong>ISBN：</strong>{{ book.isbn }}</p>{% endif %}
+        {% if book.category %}<p><strong>分类：</strong>{{ book.category.name }}</p>{% endif %}
+        <p><strong>库存：</strong>{{ book.stock if book.stock else '充足' }}</p>
+
+        {% if current_user.is_authenticated %}
+            <form method="post" action="{{ url_for('cart.add') }}" class="mt-3">
+                <input type="hidden" name="book_id" value="{{ book.id }}">
+                <div class="row g-2 align-items-center">
+                    <div class="col-auto">
+                        <input type="number" name="quantity" value="1" min="1" class="form-control" style="width: 80px;">
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-primary">加入购物车</button>
+                    </div>
+                </div>
+            </form>
+        {% else %}
+            <div class="alert alert-info mt-3">
+                <a href="{{ url_for('auth.login') }}">登录</a>后即可购买
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="mt-4">
+    <h5>图书简介</h5>
+    <hr>
+    <p>{{ book.description or '暂无简介' }}</p>
+</div>
+
+<div class="mt-3">
+    <a href="{{ url_for('books.book_list') }}" class="btn btn-outline-secondary">返回图书列表</a>
+</div>
+{% endblock %}

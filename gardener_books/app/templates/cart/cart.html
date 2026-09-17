@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}购物车{% endblock %}
+{% block content %}
+<h4>我的购物车</h4>
+
+{% if items %}
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>图书</th>
+                <th>单价</th>
+                <th>数量</th>
+                <th>小计</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td>
+                    <a href="{{ url_for('books.book_detail', book_id=item.book.id) }}">{{ item.book.title }}</a>
+                    <br><small class="text-muted">{{ item.book.author }}</small>
+                </td>
+                <td>¥{{ item.book.price }}</td>
+                <td>
+                    <form method="post" action="{{ url_for('cart.update') }}" class="d-flex align-items-center gap-1">
+                        <input type="hidden" name="item_id" value="{{ item.id }}">
+                        <input type="number" name="quantity" value="{{ item.quantity }}" min="0" class="form-control" style="width: 70px;">
+                        <button type="submit" class="btn btn-sm btn-outline-secondary">更新</button>
+                    </form>
+                </td>
+                <td>¥{{ "%.2f"|format(item.book.price * item.quantity) }}</td>
+                <td>
+                    <form method="post" action="{{ url_for('cart.remove', item_id=item.id) }}">
+                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('确定移除？')">移除</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="3" class="text-end fw-bold">总计：</td>
+                <td class="fw-bold text-danger">¥{{ "%.2f"|format(total) }}</td>
+                <td></td>
+            </tr>
+        </tfoot>
+    </table>
+    <a href="{{ url_for('cart.checkout') }}" class="btn btn-success">去结算</a>
+{% else %}
+    <div class="alert alert-info">购物车是空的，去 <a href="{{ url_for('books.book_list') }}">挑选图书</a> 吧！</div>
+{% endif %}
+{% endblock %}

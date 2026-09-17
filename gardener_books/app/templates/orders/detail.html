@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}订单详情{% endblock %}
+{% block content %}
+<h4>订单详情 #{{ order.id }}</h4>
+
+<p><strong>下单时间：</strong>{{ order.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+<p><strong>订单状态：</strong>
+    <span class="badge {% if order.status == '已付款' %}bg-success{% elif order.status == '待付款' %}bg-warning text-dark{% elif order.status == '已完成' %}bg-info{% elif order.status == '已取消' %}bg-secondary{% else %}bg-primary{% endif %}">
+        {{ order.status }}
+    </span>
+</p>
+<p><strong>收货地址：</strong>{{ order.address }}</p>
+<p><strong>联系电话：</strong>{{ order.phone }}</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>图书</th>
+            <th>单价</th>
+            <th>数量</th>
+            <th>小计</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in order.items %}
+        <tr>
+            <td><a href="{{ url_for('books.book_detail', book_id=item.book.id) }}">{{ item.book.title }}</a></td>
+            <td>¥{{ item.price }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>¥{{ "%.2f"|format(item.price * item.quantity) }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+    <tfoot>
+        <tr>
+            <td colspan="3" class="text-end fw-bold">合计：</td>
+            <td class="fw-bold text-danger">¥{{ "%.2f"|format(order.total_amount) }}</td>
+        </tr>
+    </tfoot>
+</table>
+
+<a href="{{ url_for('cart.orders') }}" class="btn btn-outline-secondary">返回订单列表</a>
+{% endblock %}

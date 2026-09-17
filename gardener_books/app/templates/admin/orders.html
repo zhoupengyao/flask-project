@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}订单管理{% endblock %}
+{% block content %}
+<h4>订单管理</h4>
+<div class="mb-3">
+    <a href="{{ url_for('admin.orders') }}" class="btn btn-sm {% if not current_status %}btn-primary{% else %}btn-outline-primary{% endif %}">全部</a>
+    {% for s in ['待付款', '已付款', '已发货', '已完成', '已取消'] %}
+        <a href="{{ url_for('admin.orders', status=s) }}" class="btn btn-sm {% if current_status == s %}btn-primary{% else %}btn-outline-primary{% endif %}">{{ s }}</a>
+    {% endfor %}
+</div>
+
+<table class="table table-hover">
+    <thead>
+        <tr>
+            <th>订单号</th>
+            <th>用户</th>
+            <th>金额</th>
+            <th>状态</th>
+            <th>收货地址</th>
+            <th>电话</th>
+            <th>时间</th>
+            <th>操作</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for order in orders %}
+        <tr>
+            <td>{{ order.id }}</td>
+            <td>{{ order.user.username }}</td>
+            <td>¥{{ "%.2f"|format(order.total_amount) }}</td>
+            <td>{{ order.status }}</td>
+            <td>{{ order.address }}</td>
+            <td>{{ order.phone }}</td>
+            <td>{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+            <td>
+                <form method="post" action="{{ url_for('admin.order_update', order_id=order.id) }}" class="d-flex gap-1">
+                    <select name="status" class="form-select form-select-sm" style="width: auto;">
+                        {% for s in ['待付款', '已付款', '已发货', '已完成', '已取消'] %}
+                            <option value="{{ s }}" {% if order.status == s %}selected{% endif %}>{{ s }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-sm btn-outline-primary">更新</button>
+                </form>
+            </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" class="text-center text-muted">暂无订单</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
